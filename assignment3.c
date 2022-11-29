@@ -22,18 +22,15 @@ FILE *openFile() {
     scanf("%s", fileName);
     FILE *userFile = fopen("../test.txt", "r");
     return userFile;
-//    printf("%s\n", p);
-//    printf("%d\n", base);
-//    printf("%d", limit);
 }
 
 
 int main() {
     int command = 0;
     linklist *list = malloc(sizeof(list));
-    list->head = malloc(4);
+    list->head = malloc(8);
     list->head = NULL;
-    list->tail = malloc(4);
+    list->tail = malloc(8);
     list->tail = NULL;
 
     while (command != 5) {
@@ -49,6 +46,8 @@ int main() {
                 memory *node = createNode(process, base, limit);
                 addNode(list, node);
             }
+            list->head = spilt(list->head);
+            list->tail = spiltPrev(list->tail);
             printf("%s\n", "operation successful");
         }
         if (command == 2) {
@@ -79,11 +78,12 @@ int main() {
                 if (prev != NULL && next != NULL && (next->next == NULL || (strcmp(next->next->process, "H")))) {
                     prev->limit = limit;
                     prev->next = next->next;
+                    next->perv = prev->perv;
                 }
                 temp = temp->next;
             }
-//            memcpy(list->head, temp, sizeof (memory));
-//            free(temp);
+            printf("%s\n", "operation successful");
+
         }
 
         if (command == 3) {
@@ -91,22 +91,21 @@ int main() {
             memory *temp = malloc(sizeof(memory));
             memcpy(temp, list->head, sizeof(memory));
             while (temp != NULL) {
-
                 if ((!strcmp(temp->process, "H"))) {
-
                     limit += temp->limit;
-
                     if (temp->next != NULL) {
-                        temp->next->base = temp->base ;
+                        temp->next->base = temp->perv->base + temp->perv->limit;
                     }
+//                    free(temp);
                     temp->perv->next = temp->next;
                 }
-
                 temp = temp->next;
-
             }
-
-            printf("%d\n", limit);
+            temp = list->head;
+            while (temp->next != NULL)
+                temp = temp->next;
+            printf("%d %d\n", temp->base, temp->limit);
+            temp->next = createNode("H", (temp->base + temp->limit), limit);
         }
 
         if (command == 4) {
@@ -120,8 +119,15 @@ int main() {
         }
     }
 
+    if (command == 5) {
+        memory *temp = list->tail;
+        while (temp != NULL) {
+            printf("%s\t", temp->process);
+            printf("%d\t", temp->base);
+            printf("%d\n", temp->limit);
+            temp = temp->perv;
+        }
 
-
-
+    }
     return 0;
 }
