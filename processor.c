@@ -130,3 +130,80 @@ void *spilt(memory *head) {
     memory *sortedLink = merge(spilt(head), spilt(head2));
     return sortedLink;
 }
+
+void mergeHoles(linklist *list) {
+    int limit = 0;
+    memory *prev = NULL;
+    memory *temp = list->head;
+    memory *next = NULL;
+
+    while (temp != NULL) {
+        if ((!strcmp(temp->process, "H")) && prev == NULL) {
+            prev = temp;
+            limit += prev->limit;
+//                    printf("This works\n");
+        } else if (((!strcmp(temp->process, "H")) && next == NULL)) {
+            next = temp;
+            limit += next->limit;
+//                    printf("This works now\n");
+        } else if ((!strcmp(temp->process, "H")) && (!strcmp(next->next->process, "H"))) {
+            next = temp;
+            limit += next->limit;
+//                    printf("This relly works now\n");
+        } else {
+            prev = NULL;
+            next = NULL;
+            limit = 0;
+        }
+        if ((prev != NULL && next != NULL) && (next->next == NULL || (strcmp(next->next->process, "H")))) {
+            prev->limit = limit;
+            prev->next = next->next;
+            // there might be a problem with this it works for all holes but not when their processer their
+            // maybe in this line in a if statement next->perv = prev->perv;
+            if (prev->perv == NULL)
+                next->perv = prev;
+            else {
+                next->perv = prev->perv;
+            }
+        }
+        temp = temp->next;
+    }
+}
+
+void compactMemory(linklist *list) {
+    int limit = 0;
+    memory *temp = malloc(sizeof(memory));
+    memcpy(temp, list->head, sizeof(memory));
+    // case for if all are holes
+    if (!strcmp(temp->process, "H") && temp->next == NULL)
+        return;
+    while (temp != NULL) {
+        // case for starts with hole
+        if ((!strcmp(temp->process, "H")) && temp->perv == NULL) {
+            limit = temp->limit;
+            temp = temp->next;
+            list->head = temp;
+            continue;
+        }
+        // this checks if curr node is a hole
+        // if it is safes its limit
+        if ((!strcmp(temp->process, "H"))) {
+            limit += temp->limit;
+            if (temp->next != NULL) {
+                // reassign the base value for next node
+                temp->next->base = temp->perv->base + temp->perv->limit;
+            }
+            // change the pointer connection
+            temp->perv->next = temp->next;
+
+        }
+        temp = temp->next;
+    }
+    temp = list->head;
+    while (temp->next != NULL)
+        temp = temp->next;
+    // case for if starts with head
+    if (!((!strcmp(temp->process, "H")) && temp->perv == NULL))
+        temp->next = createNode("H", (temp->base + temp->limit), limit);
+
+}

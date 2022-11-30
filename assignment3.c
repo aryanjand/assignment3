@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "processor.h"
 #include "processor.c"
 
@@ -21,28 +18,47 @@ FILE *openFile() {
     char *fileName = malloc(sizeof(char *));
     scanf("%s", fileName);
     FILE *userFile = fopen("../test.txt", "r");
+    if (userFile == NULL) {
+        printf("%s", "Error: File failed to open");
+        exit(0);
+    }
     return userFile;
 }
 
 
 int main() {
-    int command = 0;
+    int command = askUserCommand();
     linklist *list = malloc(sizeof(list));
     list->head = malloc(8);
     list->head = NULL;
     list->tail = malloc(8);
     list->tail = NULL;
 
-    while (command != 5) {
-        command = askUserCommand();
+    if (command < 1 || command > 5) {
+        printf("%s", "Error: Invalid Command");
+        exit(0);
+    }
 
+    while (command != 5) {
         if (command == 1) {
             FILE *userFile = openFile();
             while (!feof(userFile)) {
                 char *process = malloc(sizeof(char) * 2);
                 int base;
                 int limit;
-                fscanf(userFile, "%s %d %d", process, &base, &limit);
+                int items = fscanf(userFile, "%s %d %d", process, &base, &limit);
+                if (items != 3) {
+                    printf("%s", "Error: Invalid file data");
+                    exit(0);
+                }
+                if (limit <= 0) {
+                    printf("%s", "Error: Invalid file data");
+                    exit(0);
+                }
+                if (base < 0) {
+                    printf("%s", "Error: Invalid file data");
+                    exit(0);
+                }
                 memory *node = createNode(process, base, limit);
                 addNode(list, node);
             }
@@ -51,83 +67,29 @@ int main() {
             printf("%s\n", "operation successful");
         }
         if (command == 2) {
-            int limit = 0;
-            memory *prev = NULL;
-            memory *temp = malloc(sizeof(memory));
-            memory *next = NULL;
-            memcpy(temp, list->head, sizeof(memory));
-
-            while (temp != NULL) {
-                if ((!strcmp(temp->process, "H")) && prev == NULL) {
-                    prev = temp;
-                    limit += prev->limit;
-//                    printf("This works\n");
-                } else if (((!strcmp(temp->process, "H")) && next == NULL)) {
-                    next = temp;
-                    limit += next->limit;
-//                    printf("This works now\n");
-                } else if ((!strcmp(temp->process, "H")) && (!strcmp(next->next->process, "H"))) {
-                    next = temp;
-                    limit += next->limit;
-//                    printf("This relly works now\n");
-                } else {
-                    prev = NULL;
-                    next = NULL;
-                    limit = 0;
-                }
-                if (prev != NULL && next != NULL && (next->next == NULL || (strcmp(next->next->process, "H")))) {
-                    prev->limit = limit;
-                    prev->next = next->next;
-                    next->perv = prev->perv;
-                }
-                temp = temp->next;
-            }
-            printf("%s\n", "operation successful");
-
+            mergeHoles(list);
+            printf("%s", "operation successful\n");
         }
-
         if (command == 3) {
-            int limit = 0;
-            memory *temp = malloc(sizeof(memory));
-            memcpy(temp, list->head, sizeof(memory));
-            while (temp != NULL) {
-                if ((!strcmp(temp->process, "H"))) {
-                    limit += temp->limit;
-                    if (temp->next != NULL) {
-                        temp->next->base = temp->perv->base + temp->perv->limit;
-                    }
-//                    free(temp);
-                    temp->perv->next = temp->next;
-                }
-                temp = temp->next;
-            }
-            temp = list->head;
-            while (temp->next != NULL)
-                temp = temp->next;
-            printf("%d %d\n", temp->base, temp->limit);
-            temp->next = createNode("H", (temp->base + temp->limit), limit);
+            mergeHoles(list);
+            compactMemory(list);
+            printf("%s", "operation successful\n");
         }
-
         if (command == 4) {
+            int count = 1;
             memory *temp = list->head;
             while (temp != NULL) {
-                printf("%s\t", temp->process);
-                printf("%d\t", temp->base);
-                printf("%d\n", temp->limit);
+                printf("Node %d: %s, base = %d, limit = %d\n", count, temp->process, temp->base, temp->limit);
                 temp = temp->next;
+                count++;
             }
         }
+        command = askUserCommand();
     }
 
     if (command == 5) {
-        memory *temp = list->tail;
-        while (temp != NULL) {
-            printf("%s\t", temp->process);
-            printf("%d\t", temp->base);
-            printf("%d\n", temp->limit);
-            temp = temp->perv;
-        }
-
+        printf("%s",
+               "I\'ll Just Keep Moving Forward... \nUntil I\'ve Killed My Enemies.");
     }
     return 0;
 }

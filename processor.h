@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 struct memory_t {
     char process[2];
     int base;
